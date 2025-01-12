@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+    ports:
+      - "5000:5000"
+    environment:
+      - JWT_SECRET_KEY=WjNksdf9I_zZle-tE9vxR2w3YX-lv4TJUc1LBm3U5B8
+    depends_on:
+      - mongo
+
+  watchlist-service:
+    build:
+      context: ./watchlist-service
+    ports:
+      - "5001:5001"
+    environment:
+      - JWT_SECRET_KEY=WjNksdf9I_zZle-tE9vxR2w3YX-lv4TJUc1LBm3U5B8
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - auth-service
+      - mongo
+
+  video-service:
+    build:
+      context: ./video-service
+    ports:
+      - "5002:5002"
+    environment:
+      - AWS_ACCESS_KEY= os.environ.get("AWS_ACCESS_KEY_ID")
+      - AWS_SECRET_KEY= os.environ.get("AWS_SECRET_ACCESS_KEY")
+      - AWS_BUCKET_NAME= os.environ.get("AWS_STORAGE_BUCKET_NAME")
+      - storage-service
+
+  storage-service:
+    build:
+      context: ./storage-service
+    ports:
+      - "5003:5003"
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:5.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
